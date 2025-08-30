@@ -23,7 +23,7 @@ void LRUCache::put(const std::string& url, const std::string& body) {
 		queue.splice(queue.begin(), queue, it->second.first);
 	} else {
 		queue.push_front(url);
-	        memory[url] = { queue.begin(), CachedObject(body, CachedObject::Status::HIT) };
+		memory[url] = { queue.begin(), CachedObject(body, CachedObject::Status::HIT) };
 
 		if (memory.size() > capacity) {
 			const std::string& lru_url = queue.back();
