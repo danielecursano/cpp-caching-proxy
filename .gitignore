@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+
+# Build directories
+bin/
+obj/
+
+# Compiled object files
+*.o
+*.obj
+
+# Executables
+proxy
+
+# Backup files
+*~
+*.swp
+*.swo
+
+# IDE/editor files (optional)
+.vscode/
+*.code-workspace
+*.idea/
+

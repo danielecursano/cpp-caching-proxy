@@ -1,0 +1,91 @@
+#include "server.hpp"
+#include <iostream>
+#include <cstring>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+Server::Server(int port, size_t capacity)
+    : port(port), cache(capacity) {}
+
+void Server::run() {
+    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd < 0) {
+        std::cerr << "Socket creation failed\n";
+        return;
+    }
+
+    sockaddr_in address{};
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(port);
+
+    if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) {
+        std::cerr << "Bind failed\n";
+        close(server_fd);
+        return;
+    }
+
+    if (listen(server_fd, 5) < 0) {
+        std::cerr << "Listen failed\n";
+        close(server_fd);
+        return;
+    }
+
+    std::cout << "Server listening on port " << port << "...\n";
+
+    while (true) {
+        int client_fd = accept(server_fd, nullptr, nullptr);
+        if (client_fd < 0) {
+            std::cerr << "Accept failed\n";
+            continue;
+        }
+
+        handleClient(client_fd);
+        close(client_fd);
+    }
+
+    close(server_fd);
+}
+
+void Server::handleClient(int client_fd) {
+    char buffer[4096];
+    int bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+    if (bytes_read <= 0) return;
+
+    buffer[bytes_read] = '\0';
+    std::string request(buffer);
+
+    // Very simple GET parsing
+    size_t pos1 = request.find("GET ");
+    size_t pos2 = request.find(" HTTP");
+    if (pos1 == std::string::npos || pos2 == std::string::npos) return;
+    std::string url = request.substr(pos1 + 4, pos2 - (pos1 + 4));
+
+    // Check cache
+    CachedObject cached = cache.get(url);
+    std::string response_body;
+
+    if (cached.getStatus() == CachedObject::Status::HIT) {
+        response_body = cached.getBody();
+        std::cout << "[CACHE HIT] " << url << "\n";
+    } else {
+        std::cout << "[CACHE MISS] " << url << "\n";
+        response_body = fetchFromServer(url);
+        cache.put(url, response_body);
+    }
+
+    // Send response
+    std::string response =
+        "HTTP/1.1 200 OK\r\nContent-Length: " +
+        std::to_string(response_body.size()) +
+        "\r\nContent-Type: text/html\r\n\r\n" +
+        response_body;
+
+    send(client_fd, response.c_str(), response.size(), 0);
+}
+
+std::string Server::fetchFromServer(const std::string& url) {
+    // TODO: implement real HTTP fetch. For now, return placeholder
+    return "<html><body>Fetched content for " + url + "</body></html>";
+}
+
