@@ -37,8 +37,6 @@ make
 
 This builds the proxy executable in `build/bin/proxy`.
 
----
-
 ## Usage
 
 1. Start the proxy on a port with a specified cache capacity:
