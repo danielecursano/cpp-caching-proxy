@@ -1,4 +1,5 @@
 #include "cache.hpp"
+#include "cached_object.hpp"
 
 class Server {
 
@@ -12,5 +13,5 @@ class Server {
 		LRUCache cache;
 
 		void handleClient(int client_fd);
-		std::string fetchFromServer(const std::string& url);
+		CachedObject fetchFromServer(const std::string& url);
 };

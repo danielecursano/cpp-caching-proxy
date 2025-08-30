@@ -15,15 +15,15 @@ CachedObject LRUCache::get(const std::string& url) {
 	return it->second.second;
 }
 
-void LRUCache::put(const std::string& url, const std::string& body) {		
+void LRUCache::put(const std::string& url, const CachedObject& value) {		
 	auto it = memory.find(url);
 
 	if (it != memory.end()) {
-		it->second.second.setBody(body);
+		it->second.second = value;
 		queue.splice(queue.begin(), queue, it->second.first);
 	} else {
 		queue.push_front(url);
-		memory[url] = { queue.begin(), CachedObject(body, CachedObject::Status::HIT) };
+		memory[url] = { queue.begin(), value };
 
 		if (memory.size() > capacity) {
 			const std::string& lru_url = queue.back();

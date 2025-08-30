@@ -64,27 +64,26 @@ void Server::handleClient(int client_fd) {
 
     // Check cache
     CachedObject cached = cache.get(url);
-    std::string response_body;
 
     if (cached.getStatus() == CachedObject::Status::HIT) {
-        response_body = cached.getBody();
         std::cout << "[CACHE HIT] " << url << "\n";
     } else {
         std::cout << "[CACHE MISS] " << url << "\n";
-        response_body = fetchFromServer(url);
-        cache.put(url, response_body);
+        cached = fetchFromServer(url);
+        cache.put(url, cached);
     }
 
     // Send response
     std::string response =
         "HTTP/1.1 200 OK\r\nContent-Length: " +
-        std::to_string(response_body.size()) +
-        "\r\nContent-Type: text/html\r\n\r\n" +
-        response_body;
+        std::to_string(cached.getBody().size()) +
+        "\r\nContent-Type:" + cached.getContentType() + "\r\n\r\n" +
+        cached.getBody();
 
     send(client_fd, response.c_str(), response.size(), 0);
 }
 
-std::string Server::fetchFromServer(const std::string& url) {
-    return cpr::Get(cpr::Url{url}).text;
+CachedObject Server::fetchFromServer(const std::string& url) {
+    auto response =  cpr::Get(cpr::Url{url});
+    return CachedObject(response.header["content-type"], response.text, CachedObject::Status::HIT);
 }

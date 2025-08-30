@@ -12,7 +12,7 @@ class LRUCache {
 	public:
 		LRUCache(size_t capacity);
 		CachedObject get(const std::string& url);
-		void put(const std::string& url, const std::string& body);
+		void put(const std::string& url, const CachedObject& value);
 
 	private:
 		size_t capacity;
