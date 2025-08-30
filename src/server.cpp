@@ -3,6 +3,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <cpr/cpr.h>
 
 Server::Server(int port, size_t capacity)
     : port(port), cache(capacity) {}
@@ -85,7 +86,5 @@ void Server::handleClient(int client_fd) {
 }
 
 std::string Server::fetchFromServer(const std::string& url) {
-    // TODO: implement real HTTP fetch. For now, return placeholder
-    return "<html><body>Fetched content for " + url + "</body></html>";
+    return cpr::Get(cpr::Url{url}).text;
 }
-
