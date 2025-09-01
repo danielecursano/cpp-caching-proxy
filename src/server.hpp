@@ -1,3 +1,5 @@
+#include <mutex>
+
 #include "cache.hpp"
 #include "cached_object.hpp"
 
@@ -11,6 +13,7 @@ class Server {
 	private:
 		int port;
 		LRUCache cache;
+		std::mutex cache_mutex;
 
 		void handleClient(int client_fd);
 		CachedObject fetchFromServer(const std::string& url);

@@ -16,7 +16,7 @@ This project demonstrates a basic proxy server that caches web pages to reduce r
 
 ## TODO
 
-- [ ] Make the server multi-threaded to handle multiple clients simultaneously.
+- [x] Make the server multi-threaded to handle multiple clients simultaneously.
 - [x] Detect and return the correct Content-Type for HTML, CSS, JS, and other resources.
 
 

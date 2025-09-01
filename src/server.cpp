@@ -1,9 +1,11 @@
-#include "server.hpp"
 #include <iostream>
 #include <cstring>
+#include <thread>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <cpr/cpr.h>
+
+#include "server.hpp"
 
 Server::Server(int port, size_t capacity)
     : port(port), cache(capacity) {}
@@ -40,9 +42,10 @@ void Server::run() {
             std::cerr << "Accept failed\n";
             continue;
         }
-
-        handleClient(client_fd);
-        close(client_fd);
+	std::thread([this, client_fd]() {
+        	handleClient(client_fd);
+        	close(client_fd);
+	}).detach();
     }
 
     close(server_fd);
@@ -63,14 +66,21 @@ void Server::handleClient(int client_fd) {
     std::string url = request.substr(pos1 + 4, pos2 - (pos1 + 4));
 
     // Check cache
-    CachedObject cached = cache.get(url);
+    CachedObject cached;
+    {
+    	std::lock_guard<std::mutex> lock(cache_mutex);
+    	cached = cache.get(url);
+    }
 
     if (cached.getStatus() == CachedObject::Status::HIT) {
         std::cout << "[CACHE HIT] " << url << "\n";
     } else {
         std::cout << "[CACHE MISS] " << url << "\n";
         cached = fetchFromServer(url);
-        cache.put(url, cached);
+    	{
+		std::lock_guard<std::mutex> lock(cache_mutex);
+        	cache.put(url, cached);
+	}
     }
 
     // Send response
